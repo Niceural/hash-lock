@@ -16,7 +16,9 @@ This application allows a payer to lock funds with a secret password. These fund
   - [Communication Construction](#communication-construction)
   - [Assertion Insertion](#assertion-insertion)
 - [<a href="https://github.com/Niceural/hash-lock/blob/b9baf3e39ef52429fc8799a59e710698143be51c/index.mjs">Frontend</a>](#frontend)
-- [Discussions and Conclusions](#discussions-and-conclusions)
+- [Discussions](#discussions)
+  - [Vulnerabilities](#vulnerabilities)
+  - [Limitations](#limitations)
 - [Bibliography](#bibliography)
 
 # Introduction
@@ -53,12 +55,22 @@ The following three assertions can be added to the application to verify the log
 2. the Receiver assumes that the password provided by Alice is correct (using `assume()`);
 3. the consensus requires that the Payer's digest and the Receiver's password match (using `require()`).
 
+The implementation of the above steps can be found in [`index.rsh`](https://github.com/Niceural/hash-lock/blob/b9baf3e39ef52429fc8799a59e710698143be51c/index.rsh).
+
 # <a href="https://github.com/Niceural/hash-lock/blob/b9baf3e39ef52429fc8799a59e710698143be51c/index.mjs">Frontend</a>
 
-# Discussions and Conclusions
+A simple frontend implementation is proposed in [`index.mjs`](https://github.com/Niceural/hash-lock/blob/b9baf3e39ef52429fc8799a59e710698143be51c/index.mjs)
+Two accounts are created, one for the Payer and one for the Receiver, starting with a balance of 100 test tokens. The contracts are deployed and the password is randomly generated. Finally, the attributes and methods are implemented.
 
-feature to retrieve part of the funds
-funds go back to the payer after some time
+# Discussions
+
+## Vulnerabilities
+
+This application could not be safely used on the mainnet of Ethereum's or Algorand's network. Once the password published by the Receiver is verified with a certain gas fee amount, a corrupted miner on the network could send a transaction with the same password but a lower gas fee. The transaction of the miner would then be added to the block before the Receiver and therefore the funds would transferred to the miner and not to the Receiver. A solution to this problem is proposed in [Relay Account](https://github.com/Niceural/relay-account).
+
+## Limitations
+
+A better implementation would include a time limit past which the remaining funds would be transferred back to the payer. We could also think of a functionality to retrieve part of the locked funds. In addition, a function could be implemented to allow the Receiver to check the amount locked in the application.
 
 # Bibliography
 
