@@ -3,27 +3,42 @@ import * as backend from "./build/index.main.mjs";
 const stdlib = loadStdlib();
 
 const startingBalance = stdlib.parseCurrency(100);
+const accPayer = await stdlib.newTestAccount(startingBalance);
+const accReceiver = await stdlib.newTestAccount(startingBalance);
 
-const [accPayer, accReceiver] = await stdlib.newTestAccounts(
-  2,
-  startingBalance
+const getBalance = async (who) =>
+  stdlib.formatCurrency(await stdlib.balanceOf(who), 4);
+const beforePayer = await getBalance(accPayer);
+const beforeReceiver = await getBalance(accReceiver);
+console.log(
+  `The Payer has been transferred ${beforePayer} and the Receiver have been transferred ${beforeReceiver}.`
 );
-console.log("The Payer and the Receiver have been given some test tokens.");
 
-console.log("Launching...");
-const ctcPayer = accAlice.contract(backend);
-const ctcReceiver = accBob.contract(backend, ctcAlice.getInfo());
+const ctcPayer = accPayer.contract(backend);
+const ctcReceiver = accReceiver.contract(backend, ctcPayer.getInfo());
+console.log("The contracts have been deployed.");
 
-console.log("Starting backends...");
+const thePassword = stdlib.randomUInt();
+console.log(`The generated password is ${thePassword}`);
+
 await Promise.all([
-  backend.Alice(ctcAlice, {
-    ...stdlib.hasRandom,
-    // implement Alice's interact object here
+  backend.Payer(ctcPayer, {
+    amount: stdlib.parseCurrency(25),
+    password: thePassword,
   }),
-  backend.Bob(ctcBob, {
-    ...stdlib.hasRandom,
-    // implement Bob's interact object here
+  backend.Receiver(ctcReceiver, {
+    getPassword: () => {
+      console.log(`The Receiver asked for the password.`);
+      console.log(`Returning: ${thePassword}`);
+      return thePassword;
+    },
   }),
 ]);
 
-console.log("Goodbye, Alice and Bob!");
+const afterPayer = await getBalance(accPayer);
+const afterReceiver = await getBalance(accReceiver);
+
+console.log(`The Payer went from ${beforePayer} to ${afterPayer}.`);
+console.log(`The Receiver went from ${beforeReceiver} to ${afterReceiver}.`);
+
+console.log("Program terminated.");
